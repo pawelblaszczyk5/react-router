@@ -1923,6 +1923,67 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         "child",
       ]);
     });
+
+    it("bubbles errors thrown from patchRoutesOnNavigation() during hydration (w/v7_partialHydration)", async () => {
+      router = createRouter({
+        history: createMemoryHistory({
+          initialEntries: ["/parent/child/grandchild"],
+        }),
+        routes: [
+          {
+            id: "parent",
+            path: "parent",
+            hasErrorBoundary: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+              },
+            ],
+          },
+        ],
+        async patchRoutesOnNavigation() {
+          await tick();
+          throw new Error("broke!");
+        },
+        future: {
+          v7_partialHydration: true,
+        },
+      }).initialize();
+
+      expect(router.state).toMatchObject({
+        location: { pathname: "/parent/child/grandchild" },
+        initialized: false,
+        errors: null,
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "parent",
+        "child",
+      ]);
+
+      await tick();
+      expect(router.state).toMatchObject({
+        location: { pathname: "/parent/child/grandchild" },
+        actionData: null,
+        loaderData: {},
+        errors: {
+          parent: new ErrorResponseImpl(
+            400,
+            "Bad Request",
+            new Error(
+              'Unable to match URL "/parent/child/grandchild" - the ' +
+                "`unstable_patchRoutesOnNavigation()` function threw the following " +
+                "error:\nError: broke!"
+            ),
+            true
+          ),
+        },
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "parent",
+        "child",
+      ]);
+    });
   });
 
   describe("fetchers", () => {
