@@ -235,19 +235,21 @@ Date: 2024-??-??
 
 #### Big New Feature 1
 
+**TODO**
+
 #### Big New Feature 2
+
+**TODO**
 
 ### Major Changes (`react-router`)
 
 - Remove the original `defer` implementation in favor of using raw promises via single fetch and `turbo-stream` ([#11744](https://github.com/remix-run/react-router/pull/11744))
-
   - This removes these exports from React Router:
     - `defer`
     - `AbortedDeferredError`
     - `type TypedDeferredData`
     - `UNSAFE_DeferredData`
-    - `UNSAFE_DEFERRED_SYMBOL`,
-
+    - `UNSAFE_DEFERRED_SYMBOL`
 - Collapse packages into `react-router`([#11505](https://github.com/remix-run/react-router/pull/11505))
   - `@remix-run/router`
   - `react-router-dom`
