@@ -3,7 +3,7 @@ import type {
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
 } from "../router/utils";
-import { callRouteAction, callRouteLoader } from "./data";
+import { callRouteHandler } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
 import type { ServerRouteModule } from "./routeModules";
 
@@ -92,22 +92,20 @@ export function createStaticHandlerDataRoutes(
         ? // Need to use RR's version here to permit the optional context even
           // though we know it'll always be provided in remix
           (args: RRLoaderFunctionArgs, dataStrategyCtx?: unknown) =>
-            callRouteLoader({
+            callRouteHandler({
               request: args.request,
               params: args.params,
               loadContext: args.context,
-              loader: route.module.loader!,
-              routeId: route.id,
+              handler: route.module.loader!,
             })
         : undefined,
       action: route.module.action
         ? (args: RRActionFunctionArgs, dataStrategyCtx?: unknown) =>
-            callRouteAction({
+            callRouteHandler({
               request: args.request,
               params: args.params,
               loadContext: args.context,
-              action: route.module.action!,
-              routeId: route.id,
+              handler: route.module.action!,
             })
         : undefined,
       handle: route.module.handle,

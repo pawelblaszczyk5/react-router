@@ -1,3 +1,5 @@
+import { isDataWithResponseInit } from "../router/router";
+import { isRedirectStatusCode } from "./responses";
 import type {
   ActionFunction,
   ActionFunctionArgs,
@@ -20,60 +22,37 @@ export interface AppLoadContext {
  */
 export type AppData = unknown;
 
-export async function callRouteAction({
-  loadContext,
-  action,
-  params,
-  request,
-  routeId,
-}: {
-  request: Request;
-  action: ActionFunction;
-  params: ActionFunctionArgs["params"];
-  loadContext: AppLoadContext;
-  routeId: string;
-}) {
-  let result = await action({
-    request: stripRoutesParam(stripIndexParam(request)),
-    context: loadContext,
-    params,
-  });
-
-  if (result === undefined) {
-    throw new Error(
-      `You defined an action for route "${routeId}" but didn't return ` +
-        `anything from your \`action\` function. Please return a value or \`null\`.`
+function checkRedirect(result: ReturnType<LoaderFunction | ActionFunction>) {
+  if (
+    isDataWithResponseInit(result) &&
+    result.init &&
+    isRedirectStatusCode(result.init.status || 200)
+  ) {
+    throw new Response(
+      new Headers(result.init.headers).get("Location")!,
+      result.init
     );
   }
-
-  return result;
 }
 
-export async function callRouteLoader({
+export async function callRouteHandler({
   loadContext,
-  loader,
+  handler,
   params,
   request,
-  routeId,
 }: {
   request: Request;
-  loader: LoaderFunction;
-  params: LoaderFunctionArgs["params"];
+  handler: LoaderFunction | ActionFunction;
+  params: LoaderFunctionArgs["params"] | ActionFunctionArgs["params"];
   loadContext: AppLoadContext;
-  routeId: string;
 }) {
-  let result = await loader({
+  let result = await handler({
     request: stripRoutesParam(stripIndexParam(request)),
     context: loadContext,
     params,
   });
 
-  if (result === undefined) {
-    throw new Error(
-      `You defined a loader for route "${routeId}" but didn't return ` +
-        `anything from your \`loader\` function. Please return a value or \`null\`.`
-    );
-  }
+  checkRedirect(result);
 
   return result;
 }
